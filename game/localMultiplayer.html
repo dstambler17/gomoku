@@ -1,0 +1,26 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="style.css" rel="stylesheet"/>
+    <title>Gomoku Local Multiplayer</title>
+</head>
+<body>
+    <div class="container">
+            <div class="gameBoard">
+                <div style="display: flex;">
+                    <div>Current Player:</div>
+                    <div style="margin-left: 5px;" id="color"></div>
+                    <div style="margin-left: 5vw;">Turn Number:</div>
+                    <div style="margin-left: 5px;" id="turn-num">0</div>
+                    <div style='margin-left: 5vw;' ><button class='button' onclick="location.reload()">New</button></div>
+                </div>
+                <div id="winner" style="display: none;"></div>
+                <div class="center"></div>
+            </div>
+        </div>
+        <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script src="./localMulti/script.js" type="module"> </script>
+</body>
+</html>
