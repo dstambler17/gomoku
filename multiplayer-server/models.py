@@ -19,6 +19,7 @@ class Game():
         self.winner = None
         self.gameOver = False
         self.currentPlayer = ''
+        self.roomID = ''
 
 
     def makeMove(self, x, y, color):

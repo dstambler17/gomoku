@@ -8,6 +8,12 @@ class Game {
       this.gameOver = false
       this.playerId = ''
       this.socket = socket
+      this.roomId = ''
+    }
+
+    startNewGame(){
+        const data = {'roomID' : this.roomId, 'playerId' : this.playerId}
+        this.socket.emit('leaveGame', data) 
     }
 
 
@@ -56,8 +62,9 @@ class Game {
                         document.getElementById("turn-num").innerText = that.moves;
                         $('#color').css("background-color", `${that.color}`);
        
-                        document.cookie = 'userid:' + data['id']
+                        document.cookie = 'userid:' + data['id'] + '___' + 'roomid:' + data['room']
                         that.playerId = data['id']
+                        that.roomId = data['room']
 
                         if (data['color'] == 'black'){
                             that.loadPieces(data['gameBoard'])
@@ -67,6 +74,18 @@ class Game {
                         alert('game is full!')
                     }
             });
+
+            that.socket.on('loadPlayer', function(data){
+                    console.log(data)
+                    that.color = data['color']
+                    that.moves = data['moves']
+                    document.getElementById("turn-num").innerText = that.moves;
+                    $('#color').css("background-color", `${that.color}`);
+                    that.playerId = data['id']
+                    that.roomId = data['room']
+                    that.loadPieces(data['gameBoard'])
+            });
+
             this.socket.on('message', function(data) {
                 console.log('Received message');
                 //Don't play anymore if winner
@@ -94,7 +113,19 @@ class Game {
         
             this.socket.on('errorMove', function(data) {
                 alert(data['error'])
-            })
+            });
+
+            that.socket.on('leaveGame', function(data) {
+                document.cookie = ''
+                if (data['playerId'] === that.playerId){
+                    location.reload()
+                } else{
+                    alert("The other player has left, will refresh in 2 seconds")
+                    setTimeout(function () {
+                        location.reload()
+                    }, 2000)
+                }  
+            });
         }
 
           loadPieces(board){
@@ -124,8 +155,16 @@ class Game {
 
           //Create tiles for game board
           createTiles(){
+            //if cookie, load game, else create new game
+            if ((document.cookie).includes("userid:") && (document.cookie).includes("roomid")){
+                const playerid = (document.cookie).split('___')[0].split('userid:')[1]
+                const roomid = (document.cookie).split('___')[1].split('roomid:')[1]
+                this.socket.emit('loadPlayer', {'room': roomid, 'player': playerid})
+            } else{
+                this.socket.emit('addNewPlayer', {})
+            }
+            
             //Create tiles in the DOM
-            this.socket.emit('addNewPlayer', {})
             for (let i = 0; i < 19; i++) {
               for (let j = 0; j < 18; j++) {
                 $('.center').append(`<button class="tile" id="button_${i}_${j}"></button>`)
@@ -142,7 +181,7 @@ class Game {
             }
 
             //Attach the event listener to the new game button
-            //$('#new_button').on('click', this.startNewGame.bind(this));
+            $('#new_game').on('click', this.startNewGame.bind(this));
           }
 
         //get current player
@@ -165,8 +204,8 @@ class Game {
         var that = this
         console.log("COLOR")
         console.log(this.color)
-        const cookieId = this.playerId
-        const data = {"x" : row.toString(), "y" : col.toString(), "id" : cookieId, 'color' : color}
+        const id = this.playerId
+        const data = {"x" : row.toString(), "y" : col.toString(), "id" : id, 'color' : color, 'roomID' : that.roomId}
         this.socket.send(data)
       }
 
@@ -176,6 +215,7 @@ class Game {
         } else if (game_is_over && gameWinner === ''){
             alert('Tie!')
             this.gameOver = true
+            document.cookie = ''
         } else {
             let winner = document.getElementById('winner')
             $('#color').css("margin-bottom", "5px");
@@ -184,6 +224,7 @@ class Game {
             winner.style.marginBottom = '1em'
             winner.innerText = 'Winner: ' + gameWinner.toUpperCase()
             this.gameOver = true
+            document.cookie = ''
         }
       }
 
