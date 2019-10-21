@@ -6,7 +6,7 @@ class ValidationFailed:
         self.status_code = 401
 
 class Game():
-    def __init__(self):
+    def __init__(self, d=None):
         board = []
         '''Add each board row here'''
         for x in range(0,19):
@@ -20,6 +20,11 @@ class Game():
         self.gameOver = False
         self.currentPlayer = ''
         self.roomID = ''
+
+        #option to initialize object from dict
+        if d is not None:
+            for key in d:
+                setattr(self, key, d[key])
 
 
     def makeMove(self, x, y, color):

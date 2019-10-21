@@ -2,7 +2,7 @@ from server.errorHandler.errors import *
 import uuid
 
 class Game():
-    def __init__(self):
+    def __init__(self, d=None):
         board = []
         '''Add each board row here'''
         for x in range(0,19):
@@ -14,6 +14,12 @@ class Game():
         self.winner = None
         self.gameOver = False
         self.gameID = str(uuid.uuid4())
+
+        #option to initialize object from dict
+        if d is not None:
+            for key in d:
+                setattr(self, key, d[key])
+
 
     def makeMove(self, x, y):
         '''Get the row at pos x'''

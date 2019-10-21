@@ -3,41 +3,45 @@ import json
 import uuid
 from flask import Blueprint, request, jsonify
 from server.models import Game
+from server import mongo
 from server.errorHandler.errors import *
-games = [];
+#games = [];
 Gomoku = Blueprint('Gomoku', __name__)
 
 
 @Gomoku.route('/newGame', methods=['POST'])
 def setup_match():
-    global games
+    #get games from mongodb
+    games = mongo.db.AISinglePlayer
     game = Game()
     #Interesting safari test situation
     if '=' in game.gameID:
         game.gameID = game.gameID.replace('=', '')
     game.playerColor = 'white' #means black is AI color
-    games.append(game)
+
+    dictGame = game.__dict__
+    print(dictGame)
+    games.insert(dictGame)
     return jsonify({'color' : game.playerColor, 'id' : game.gameID}), 201
 
 '''Load Game'''
 @Gomoku.route('/getGame/<id>', methods=['GET'])
 def load_match(id):
-    global games
+
     if '=' in id:
         id = id.replace('=', '')
     game = None
-    for g in games:
-        if g.gameID == id:
-            game = g
-    if game is None:
+    #query mongodb for games
+    games = mongo.db.AISinglePlayer
+    game = games.find_one({'gameID' : id})
+    if not game:
         return jsonify({'err_msg': 'No game found'}), 404
 
-    return jsonify({'color': game.playerColor, 'gameBoard' : game.board, 'moves' : game.move})
+    return jsonify({'color': game['playerColor'], 'gameBoard' : game['board'], 'moves' : game['move']})
 
 @Gomoku.route('/playMove', methods=['POST'])
 def playMove():
 
-    global games
     '''contain:, x, y, id'''
     requestBody = json.loads(request.get_data())
     print(requestBody)
@@ -48,15 +52,14 @@ def playMove():
     #Safari issue fix
     if '=' in requestBody['id']:
         rbid = requestBody['id'].replace('=', '')
-    for g in games:
-        print(g.gameID)
-        if g.gameID == rbid:
-            game = g
-    if game is None:
+    #get data from mongodb
+    games = mongo.db.AISinglePlayer
+    gameDict = games.find_one({'gameID' : rbid})
+    game = Game(gameDict)
+    if not gameDict:
         return jsonify({'err_msg': 'No game found'}), 404
     #Check if the board has a winner and return winner
     if game.gameOver:
-        print("winner issue")
         return jsonify({'err_msg': 'The game is over!'}), 401
     '''END OF VALIDITY CHECKS '''
 
@@ -77,15 +80,21 @@ def playMove():
     if game.winner is None:
         winner = ''
 
+    #update the data in mongodb
+    gameDictRes = game.__dict__
+    myquery = {'gameID': rbid }
+    newvalues = { "$set": gameDictRes }
+    games.update_one(myquery, newvalues)
+    print(game.gameOver)
     return jsonify({'Computer_Move_Row': comp_row, 'Computer_Move_Col' : comp_col, 'Winner': winner, 'GameOver' : game.gameOver}), 201
 
 @Gomoku.route('/deleteGame/<id>', methods=['DELETE'])
 def deleteGame(id):
-    global games
-    for g in games:
-        if g.gameID == id:
-            game = g
-    if game is None:
+    #global games
+    games = mongo.db.AISinglePlayer
+    game = games.find_one({'gameID' : id})
+    if not game:
         return jsonify({'err_msg': 'No game found'}), 404
-    games.remove(game)
+    game = games.delete_one({'gameID' : id})
+
     return jsonify({}), 204
