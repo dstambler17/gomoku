@@ -1,12 +1,103 @@
 from server.errorHandler.errors import *
 import uuid
 
+class Evaluator:
+    #Check if player has 5 pawns in row
+    @staticmethod
+    def EvalRow(color, board):
+        value = 0
+        maxValue = 0
+        for row in range(19):
+            maxValue = value if value > maxValue else maxValue
+            value = 0
+            for col in range(19):
+                if board[row][col] != color:
+                    maxValue = value if value > maxValue else maxValue
+                    value = 0
+                else:
+                    value += 1
+        return maxValue
+
+
+    #Check if player has 5 pawns in column
+    @staticmethod
+    def EvalCol(color, board):
+        value = 0
+        maxValue = 0
+        for col in range(19):
+            maxValue = value if value > maxValue else maxValue
+            value = 0
+            for row in range(19):
+                if board[row][col] != color:
+                    maxValue = value if value > maxValue else maxValue
+                    value = 0
+                else:
+                    value += 1
+        return maxValue
+
+
+    #Check if player has 5 pawns in diagonal from top left to bottom right
+    @staticmethod
+    def EvalDiagDownRight(color, board):
+        val = 0
+        maxVal = 0
+        for col in range(15):
+            for row in range(15):
+                maxVal = val if val > maxVal else maxVal
+                val = 0
+                for i in range(5):
+                    if color != board[row + i][col + i]:
+                        maxVal = val if val > maxVal else maxVal
+                        val = 0
+                    else:
+                        val += 1
+        return maxVal
+
+
+    #Check if player has 5 pawns in diagonal from top right to bottom left
+    @staticmethod
+    def EvalDiagUpRight(color, board):
+        val = 0
+        maxVal = 0
+        for col in range(4, 19):
+            for row in range(15):
+                maxVal = val if val > maxVal else maxVal
+                val = 0
+                for i in range(5):
+                    if color != board[row + i][col - i]:
+                        maxVal = val if val > maxVal else maxVal
+                        val = 0
+                    else:
+                        val += 1
+        return maxVal
+
+    @staticmethod
+    def evaluate_position(color, board):
+        '''
+        The idea is to serve as an eval function for the minimax algorithm
+        '''
+        points = [Evaluator.EvalCol(color, board), Evaluator.EvalRow(color, board), Evaluator.EvalDiagDownRight(color, board), Evaluator.EvalDiagUpRight(color, board)]
+        if 5 in points:
+            return 100000 #This means, the player wins
+        double_cut_check = 0
+        for point in points:
+            if point == 4:
+                double_cut_check += 1
+        if double_cut_check >= 2:
+            return 10 #This means pinsir and thus next move wins
+        else:
+            return max(points)
+
+
+
+
+
 class Game():
     def __init__(self, d=None):
         board = []
         '''Add each board row here'''
         for x in range(0,19):
-            board.append(['','','','','','','','','','','','','','','','','','',''])
+            board.append([''] * 19)
 
         self.board = board
         self.move = 0
@@ -31,8 +122,37 @@ class Game():
 
     '''MAKE AI MOVE'''
     def makeAIMove(self, x, y):
-        self.board[x+1][y+1] = 'black'
-        return x+1, y+1
+        '''
+        Implementing the Minimax algo
+        '''
+        #1.Implement eval for diagonal DONE
+        #2. Add test endpoint DONE
+        #3. Test eval DONE
+        #4. Loop through initial move
+        #5. Add minimizer loop
+
+        #maximizer:
+        max_move_tuple = (0,0,0)
+        for i in range(19):
+            for j in range(19):
+                if self.board[i][j] == '':
+                    self.board[i][j] = 'black'
+                    #minimizer:
+                    min_move_tuple = (100000, 0, 0)
+                    for x in range(19):
+                        print(x)
+                        for y in range(19):
+                            if self.board[x][y] == '':
+                                self.board[x][y] = 'white'
+                                score = Evaluator.evaluate_position('black', self.board)
+                                if score < min_move_tuple[0]:
+                                    min_move_tuple = (score, x, y)
+                                self.board[x][y] = ''
+                    self.board[i][j] = ''
+                    if min_move_tuple[0] > max_move_tuple[0]:
+                        max_move_tuple = (min_move_tuple[0], i, j)
+        print(max_move_tuple)
+        return max_move_tuple[1], max_move_tuple[2]
 
 
 

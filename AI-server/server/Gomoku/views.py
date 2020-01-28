@@ -98,3 +98,25 @@ def deleteGame(id):
     game = games.delete_one({'gameID' : id})
 
     return jsonify({}), 204
+
+
+@Gomoku.route('/testAI', methods=['GET'])
+def testAI():
+    game_test = Game()
+    game_test.playerColor = 'white'
+    board_test = []
+    for x in range(0,19):
+            board_test.append([''] * 19)
+    game_test.board = board_test
+    board_test[2][2] = 'black'
+    board_test[3][3] = 'black'
+    board_test[1][1] = 'black'
+    board_test[1][2] = 'black'
+    board_test[1][3] = 'black'
+    board_test[1][4] = 'black'
+    print(board_test)
+    game_test.board = board_test
+    
+    
+    comp_row, comp_col = game_test.makeAIMove(8, 9)
+    return jsonify({'comp_row' : comp_row, 'comp_col' : comp_col}), 200
