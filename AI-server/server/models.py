@@ -1,5 +1,6 @@
 from server.errorHandler.errors import *
 import uuid
+import time
 
 class Evaluator:
     #Check if player has 5 pawns in row
@@ -133,6 +134,7 @@ class Game():
 
         #maximizer:
         max_move_tuple = (0,0,0)
+        start = time.time()
         for i in range(19):
             for j in range(19):
                 if self.board[i][j] == '':
@@ -148,10 +150,16 @@ class Game():
                                 if score < min_move_tuple[0]:
                                     min_move_tuple = (score, x, y)
                                 self.board[x][y] = ''
+                                if min_move_tuple[0] < max_move_tuple[0]:
+                                    break
+                        if min_move_tuple[0] < max_move_tuple[0]:
+                            break
                     self.board[i][j] = ''
                     if min_move_tuple[0] > max_move_tuple[0]:
                         max_move_tuple = (min_move_tuple[0], i, j)
         print(max_move_tuple)
+        end = time.time()
+        print('Evaluation time: {}s'.format(round(end - start, 7)))
         return max_move_tuple[1], max_move_tuple[2]
 
 
