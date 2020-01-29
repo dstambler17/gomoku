@@ -1,6 +1,7 @@
 from server.errorHandler.errors import *
 import uuid
 import time
+from random import randrange
 
 class Evaluator:
     #Check if player has 5 pawns in row
@@ -79,7 +80,7 @@ class Evaluator:
         '''
         points = [Evaluator.EvalCol(color, board), Evaluator.EvalRow(color, board), Evaluator.EvalDiagDownRight(color, board), Evaluator.EvalDiagUpRight(color, board)]
         if 5 in points:
-            return 100000 #This means, the player wins
+            return 100 #This means, the player wins
         double_cut_check = 0
         for point in points:
             if point == 4:
@@ -123,6 +124,13 @@ class Game():
 
     '''MAKE AI MOVE'''
     def makeAIMove(self, x, y):
+        if self.move <= 1: #make random first move
+            row = randrange(19)
+            col = randrange(19)
+            if self.board[row][col] == 'white':
+                col += 1
+            self.board[row][col] = 'black'
+            return row, col
         '''
         Implementing the Minimax algo
         '''
@@ -133,20 +141,25 @@ class Game():
         #5. Add minimizer loop
 
         #maximizer:
-        max_move_tuple = (0,0,0)
+        max_move_tuple = (-100,0,0)
         start = time.time()
         for i in range(19):
             for j in range(19):
                 if self.board[i][j] == '':
                     self.board[i][j] = 'black'
                     #minimizer:
-                    min_move_tuple = (100000, 0, 0)
+                    min_move_tuple = (100, 0, 0)
                     for x in range(19):
                         print(x)
                         for y in range(19):
                             if self.board[x][y] == '':
                                 self.board[x][y] = 'white'
-                                score = Evaluator.evaluate_position('black', self.board)
+                                score_black = Evaluator.evaluate_position('black', self.board)
+                                if self.move >= 4: #check just to help enhance speed at start of game
+                                    score_white = (Evaluator.evaluate_position('white', self.board) * -1) + 1
+                                    score = score_black if (score_black + score_white) > 0 else score_white
+                                else:
+                                    score = score_black
                                 if score < min_move_tuple[0]:
                                     min_move_tuple = (score, x, y)
                                 self.board[x][y] = ''
@@ -160,6 +173,7 @@ class Game():
         print(max_move_tuple)
         end = time.time()
         print('Evaluation time: {}s'.format(round(end - start, 7)))
+        self.board[max_move_tuple[1]][max_move_tuple[2]] = 'black'
         return max_move_tuple[1], max_move_tuple[2]
 
 

@@ -74,7 +74,7 @@ def playMove():
 
     game.checkWinner('white')
     comp_row, comp_col = game.makeAIMove(x, y)
-    #game.checkWinner('black')
+    game.checkWinner('black')
 
     winner = game.winner
     if game.winner is None:
@@ -109,11 +109,15 @@ def testAI():
             board_test.append([''] * 19)
     
     game_test.board = board_test
+    game_test.move = 4
     board_test[0][0] = 'white'
-    board_test[16][17] = 'black'
+    board_test[1][1] = 'white'
+    board_test[2][2] = 'white'
+    board_test[3][3] = 'white'
+    ''' board_test[16][17] = 'black'
     board_test[15][18] = 'black'
     board_test[18][1] = 'black'
-    board_test[18][2] = 'black'
+    board_test[18][2] = 'black' '''
 
     
     game_test.board = board_test
